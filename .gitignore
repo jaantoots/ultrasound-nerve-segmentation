@@ -1,3 +1,7 @@
+# Exclude large data
+train/
+test/
+
 # Compiled Lua sources
 luac.out
 
