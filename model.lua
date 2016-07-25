@@ -1,7 +1,6 @@
 local nn = require "nn"
 local cudnn = require "cudnn"
 
-local model = {}
 local net = nn.Sequential()
 
 function net:ConvolutionLayer (nInputPlane, nOutputPlane)
@@ -70,14 +69,8 @@ InitializeWeights("nn.SpatialConvolution")
 InitializeWeights("nn.SpatialDilatedConvolution")
 InitializeWeights("nn.SpatialFullConvolution")
 
--- Loss function
-local criterion = cudnn.SpatialCrossEntropyCriterion()
-
 -- Move to GPU
 cudnn.convert(net, cudnn)
 net = net:cuda()
-criterion = criterion:cuda()
 
-model.net = net
-model.criterion = criterion
-return model
+return net

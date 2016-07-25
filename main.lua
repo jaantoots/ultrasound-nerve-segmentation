@@ -1,27 +1,20 @@
-require 'torch'
-require 'cutorch'
-require 'nn'
--- require 'cunn'
-require 'cudnn'
+local torch = require "torch"
+require "cutorch"
+local nn = require "nn"
+local cudnn = require "cudnn"
 
--- Load the datasets
+-- Dataset handling methods
 -- TODO: Return random permutations
-local trainset = torch.load('train.t7')
-local testset = torch.load('test.t7')
+local data = require "data"
 
 -- Set metatable to return [i]th sample and func for size
 
 -- Normalize data
 
--- Define model
---[[
-   Use VGG configuration D or E: conv3 layers with ReLU and maxpooling
-   No FC layers, image output
-   Softmax loss
-   Use dropout and batch normalization
---]]
-
--- Define loss function
+-- Network and loss function
+local net = require "model"
+local criterion = cudnn.SpatialCrossEntropyCriterion()
+criterion = criterion:cuda()
 
 -- Train the network
 
