@@ -26,7 +26,7 @@ for file in paths.iterfiles(dir) do
     end
   end
 end
-print("Training", "Validation", "Width", "Height")
+print("Train", "Valid.", "Width", "Height")
 print(#data.train, #data.validation, data.width, data.height)
 
 -- Initialize variables for returning images from a random permutation

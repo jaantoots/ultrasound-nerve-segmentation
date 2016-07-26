@@ -36,7 +36,7 @@ print("==> Start training: " .. params:nElement() .. " parameters")
 local logger = optim.Logger('out/accuracy.log')
 logger:setNames{'Iteration', 'Loss'}
 -- TODO: Add accuracy function
-local meanLoss = 0
+local lossWindow = {}
 
 for i = 1, maxIterations do
   -- Get the minibatch
@@ -58,10 +58,9 @@ for i = 1, maxIterations do
   local _, fs = optim.rmsprop(feval, params, config)
 
   -- Log loss
-  meanLoss = meanLoss + fs[1]
-  if math.fmod(i, 100) == 0 then
-    logger:add{i, meanLoss/100}
-    meanLoss = 0
+  lossWindow[math.fmod(i, 10) + 1] = fs[1]
+  if i >= 10 then
+    logger:add{i, lossWindow:mean()}
   end
 
   -- Save model
