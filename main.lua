@@ -4,7 +4,6 @@ require "nn"
 require "cunn"
 local cudnn = require "cudnn"
 local optim = require "optim"
-local itorch = require "itorch"
 
 -- Dataset handling methods
 local data = require "data"
@@ -47,10 +46,6 @@ for i = 1, maxIterations do
     local gradLoss = criterion:backward(outputs, batchLabels)
     net:backward(batchInputs, gradLoss)
     print(i, loss)
-    if math.fmod(i, 10) == 0 then
-      local _, predLabels = torch.max(outputs[1]:squeeze(), 1)
-      itorch.image({batchInputs[1], batchLabels[1] - 1, predLabels - 1})
-    end
     return loss, gradParams
   end
   optim.rmsprop(feval, params, config)
