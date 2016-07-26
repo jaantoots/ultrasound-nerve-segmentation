@@ -42,17 +42,12 @@ for i = 1, maxIterations do
   local function feval (_)
     -- For optim, outputs f(X): loss and df/dx: gradients
     gradParams:zero()
-    print("Forward pass")
     local outputs = net:forward(batchInputs)
-    print(outputs:size())
-    print("Loss")
     local loss = criterion:forward(outputs, batchLabels)
-    print("Loss gradient")
     local gradLoss = criterion:backward(outputs, batchLabels)
-    print("Backpropagation")
     net:backward(batchInputs, gradLoss)
     print(i, loss)
-    if math.fmod(i, 10) then
+    if math.fmod(i, 10) == 0 then
       local _, predLabels = torch.max(outputs[1]:squeeze(), 1)
       itorch.image({batchInputs[1], batchLabels[1] - 1, predLabels - 1})
     end
