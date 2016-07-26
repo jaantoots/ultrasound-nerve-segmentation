@@ -36,7 +36,7 @@ print("==> Start training: " .. params:nElement() .. " parameters")
 local logger = optim.Logger('out/accuracy.log')
 logger:setNames{'Iteration', 'Loss'}
 -- TODO: Add accuracy function
-local lossWindow = {}
+local lossWindow = torch.Tensor(10):zero()
 
 for i = 1, maxIterations do
   -- Get the minibatch
