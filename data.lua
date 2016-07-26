@@ -19,12 +19,10 @@ for file in paths.iterfiles(dir) do
     data.width, data.height = gm.Image(dir .. '/' .. file):size()
   end
   local subject = tonumber(string.match(file, '%d+'))
-  if data.validationSubjects[subject] then
-    if not string.match(file, 'mask') then
+  if not string.match(file, 'mask') then
+    if data.validationSubjects[subject] then
       data.validation[#data.validation + 1] = string.match(file, '%d+_%d+')
-    end
-  else
-    if not string.match(file, 'mask') then
+    else
       data.train[#data.train + 1] = string.match(file, '%d+_%d+')
     end
   end
