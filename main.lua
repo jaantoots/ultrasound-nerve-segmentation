@@ -23,7 +23,7 @@ criterion = criterion:cuda()
 -- Train the network
 net:training()
 local maxIterations = 1000
-local batchSize = 8
+local batchSize = 4
 local config = {
   learningRate = 1e-1,
   alpha = 0.99,
@@ -44,6 +44,7 @@ for i = 1, maxIterations do
     gradParams:zero()
     print("Forward pass")
     local outputs = net:forward(batchInputs)
+    print(outputs:size())
     print("Loss")
     local loss = criterion:forward(outputs, batchLabels)
     print("Loss gradient")
