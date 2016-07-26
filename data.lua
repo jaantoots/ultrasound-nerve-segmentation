@@ -57,11 +57,11 @@ function data.batch (batchSize)
         image for data.training
     labels: torch.Tensor of the same size containing class indices
   --]]
-  local inputs = torch.Tensor(batchSize, data.width, data.height)
+  local inputs = torch.Tensor(batchSize, 1, data.width, data.height)
   local labels = torch.Tensor(batchSize, data.width, data.height)
   for i = 1, batchSize do
     local image = dir .. '/' .. nextImage()
-    inputs[i] = gm.Image(image .. '.tif'):toTensor('double', 'I')
+    inputs[i][1] = gm.Image(image .. '.tif'):toTensor('double', 'I')
     labels[i] = gm.Image(image .. '_mask.tif'):toTensor('double', 'I')
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
