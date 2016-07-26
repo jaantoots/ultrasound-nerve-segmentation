@@ -36,7 +36,6 @@ for i = 1, maxIterations do
   local batch = data.batch(batchSize)
   local batchInputs = batch.inputs:cuda()
   local batchLabels = batch.labels:cuda()
-  print(batchInputs:size(), batchLabels:size())
   -- TODO: Check weights initialization
 
   local function feval (_)
