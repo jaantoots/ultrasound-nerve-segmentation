@@ -3,11 +3,6 @@ local paths = require "paths"
 local gm = require "graphicsmagick"
 
 local data = {} -- Return variable
-local dir = 'train'
-data.height = 200
-data.width = 280
-data.train = {}
-data.validation = {}
 
 -- Vanilla validation set definition
 data.validationSubjects = {}
@@ -15,27 +10,47 @@ for i = 39, 47 do
   data.validationSubjects[i] = true
 end
 
--- Get the images and dimensions in the data.training set
-for file in paths.iterfiles(dir) do
-  local subject = tonumber(string.match(file, '%d+'))
-  if not string.match(file, 'mask') then
-    if data.validationSubjects[subject] then
-      data.validation[#data.validation + 1] = string.match(file, '%d+_%d+')
-    else
-      data.train[#data.train + 1] = string.match(file, '%d+_%d+')
+function data.init (dir, height, width)
+  --[[Initialize data to read from dir and resize images to height and width
+
+  Parameters
+  ----------
+  dir: directory containing the training images
+  height: height for resizing
+  width: width for resizing
+
+  Returns
+  -------
+  Print number of images in training and validation sets and the specified size
+  --]]
+  data.dir = dir
+  data.train = {}
+  data.validation = {}
+  for file in paths.iterfiles(data.dir) do
+    local subject = tonumber(string.match(file, '%d+'))
+    if not string.match(file, 'mask') then
+      -- Divide according to subject number
+      if data.validationSubjects[subject] then
+        data.validation[#data.validation + 1] = string.match(file, '%d+_%d+')
+      else
+        data.train[#data.train + 1] = string.match(file, '%d+_%d+')
+      end
     end
   end
+  data.height = height
+  data.width = width
+
+  print("Train", "Valid.", "Width", "Height")
+  print(#data.train, #data.validation, data.width, data.height)
 end
-print("Train", "Valid.", "Width", "Height")
-print(#data.train, #data.validation, data.width, data.height)
 
--- Initialize variables for returning images from a random permutation
+-- Initialize variables for nextImage
 local shuffle
-local iteration = #data.train
-
+local iteration
 local function nextImage ()
-  -- Return the next image from the data.training dataset
-  if iteration >= #data.train then -- Move to next epoch as necessary
+  -- Return the next image from a random permutation of the training dataset
+  if iteration == nil or iteration >= #data.train then
+    -- Move to next epoch as necessary
     shuffle = torch.randperm(#data.train)
     iteration = 0
   end
@@ -60,7 +75,7 @@ function data.batch (batchSize)
   local inputs = torch.Tensor(batchSize, 1, data.height, data.width)
   local labels = torch.Tensor(batchSize, data.height, data.width)
   for i = 1, batchSize do
-    local image = dir .. '/' .. nextImage()
+    local image = data.dir .. '/' .. nextImage()
     inputs[i][1] = gm.Image(image .. '.tif'):size(
       data.width, data.height):toTensor('double', 'I', 'HW')
     labels[i] = gm.Image(image .. '_mask.tif'):size(

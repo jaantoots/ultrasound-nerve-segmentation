@@ -5,8 +5,13 @@ require "cunn"
 local cudnn = require "cudnn"
 local optim = require "optim"
 
+-- Enable these for final training
+-- cudnn.benchmark = true
+-- cudnn.fastest = true
+
 -- Dataset handling methods
 local data = require "data"
+data.init('train', 200, 280)
 -- TODO: Downscaled images should fit to memory: faster not to read from disk
 -- TODO: Calculate weights
 local weights = torch.Tensor{0.5, 0.5}
