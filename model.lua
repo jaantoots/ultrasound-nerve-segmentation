@@ -1,4 +1,5 @@
 local nn = require "nn"
+require "cunn"
 local cudnn = require "cudnn"
 
 local net = nn.Sequential()

@@ -1,6 +1,7 @@
 local torch = require "torch"
 require "cutorch"
 require "nn"
+require "cunn"
 local cudnn = require "cudnn"
 local optim = require "optim"
 local itorch = require "itorch"
