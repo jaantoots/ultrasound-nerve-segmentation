@@ -31,6 +31,9 @@ local config = {
 local params, gradParams = net:getParameters()
 print("Check parameters:", params:mean(), params:std())
 print("==>Start training: " .. params:nElement() .. " parameters")
+local logger = optim.Logger('out/accuracy.log')
+logger:setNames{'Iteration', 'Loss'}
+local meanLoss = 0
 for i = 1, maxIterations do
   -- Get the minibatch
   local batch = data.batch(batchSize)
@@ -48,11 +51,21 @@ for i = 1, maxIterations do
     print(i, loss)
     return loss, gradParams
   end
-  optim.rmsprop(feval, params, config)
-end
+  local _, fs = optim.rmsprop(feval, params, config)
 
-net:clearState()
-torch.save('out' .. '/model_' .. maxIterations .. '.bin', net)
+  -- Log loss
+  meanLoss = meanLoss + fs[1]
+  if math.fmod(i, 100) then
+    logger:add{i, meanLoss/100}
+    meanLoss = 0
+  end
+
+  -- Save model
+  if math.fmod(i, 1000) then
+    net:clearState()
+    torch.save('out' .. '/model_' .. i .. '.bin', net)
+  end
+end
 
 -- Validate
 
