@@ -4,6 +4,8 @@ local gm = require "graphicsmagick"
 
 local data = {} -- Return variable
 local dir = 'train'
+data.height = 200
+data.width = 280
 data.train = {}
 data.validation = {}
 
@@ -15,9 +17,6 @@ end
 
 -- Get the images and dimensions in the data.training set
 for file in paths.iterfiles(dir) do
-  if data.width == nil then
-    data.width, data.height = gm.Image(dir .. '/' .. file):size()
-  end
   local subject = tonumber(string.match(file, '%d+'))
   if not string.match(file, 'mask') then
     if data.validationSubjects[subject] then
@@ -61,8 +60,10 @@ function data.batch (batchSize)
   local labels = torch.Tensor(batchSize, data.height, data.width)
   for i = 1, batchSize do
     local image = dir .. '/' .. nextImage()
-    inputs[i][1] = gm.Image(image .. '.tif'):toTensor('double', 'I', 'HW')
-    labels[i] = gm.Image(image .. '_mask.tif'):toTensor('double', 'I', 'HW')
+    inputs[i][1] = gm.Image(image .. '.tif'):size(
+      data.width, data.height):toTensor('double', 'I', 'HW')
+    labels[i] = gm.Image(image .. '_mask.tif'):size(
+      data.width, data.height):toTensor('double', 'I', 'HW')
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
   return {inputs = inputs, labels = labels}

@@ -23,14 +23,15 @@ criterion = criterion:cuda()
 -- Train the network
 net:training()
 local maxIterations = 1000
-local batchSize = 2
+local batchSize = 8
 local config = {
   learningRate = 1e-1,
   alpha = 0.99,
   epsilon = 1e-6
 }
 local params, gradParams = net:getParameters()
-print("Start training: " .. params:nElement() .. " parameters")
+print("Check parameters:", params:mean(), params:std())
+print("==>Start training: " .. params:nElement() .. " parameters")
 for i = 1, maxIterations do
   -- Get the minibatch
   local batch = data.batch(batchSize)

@@ -26,15 +26,15 @@ function net:DilatedConvolutionLayer (nInputPlane, nOutputPlane, dilation)
 end
 
 -- Based on VGG ConvNet configuration D
--- 580x420
+-- 280x200
 net:ConvolutionLayer(1, 64)
 net:ConvolutionLayer(64, 64)
 net:add(nn.SpatialMaxPooling(2, 2, 2, 2))
--- 290x210
+-- 140x100
 net:ConvolutionLayer(64, 128)
 net:ConvolutionLayer(128, 128)
 net:add(nn.SpatialMaxPooling(2, 2, 2, 2))
--- 145x105
+-- 70x50
 net:ConvolutionLayer(128, 256)
 net:ConvolutionLayer(256, 256)
 net:ConvolutionLayer(256, 256)
@@ -53,7 +53,7 @@ net:add(nn.Dropout(0.5))
 -- Classification
 net:add(nn.SpatialConvolution(512, 2, 1, 1))
 net:add(nn.SpatialFullConvolution(2, 2, 8, 8, 4, 4, 2, 2))
--- back to 580x420
+-- back to 280x200
 
 -- Weights initialization for convolutional layers
 local function InitializeWeights (name)
