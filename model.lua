@@ -16,7 +16,7 @@ end
 function net:DilatedConvolutionLayer (nInputPlane, nOutputPlane, dilation)
   -- SpatialConvolution layer with 3x3 kernel, stride 1, padding, and dilation
   local kernel = 3
-  local pad = math.floor(dilation*(kernel - 1)/2 - 1)
+  local pad = math.floor(dilation*(kernel - 1)/2)
   self:add(nn.SpatialDilatedConvolution(nInputPlane, nOutputPlane,
       kernel, kernel, 1, 1, pad, pad, dilation, dilation))
   -- Batch normalization with default arguments

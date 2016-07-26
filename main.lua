@@ -23,7 +23,7 @@ criterion = criterion:cuda()
 -- Train the network
 net:training()
 local maxIterations = 1000
-local batchSize = 4
+local batchSize = 2
 local config = {
   learningRate = 1e-1,
   alpha = 0.99,
