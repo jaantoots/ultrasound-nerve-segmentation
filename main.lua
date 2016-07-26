@@ -32,8 +32,8 @@ local params, gradParams = net:getParameters()
 for i = 1, maxIterations do
   -- Get the minibatch
   local batch = data.batch(batchSize)
-  local batchInputs = batch.inputs
-  local batchLabels = batch.labels
+  local batchInputs = batch.inputs:cuda()
+  local batchLabels = batch.labels:cuda()
   -- TODO: Check weights initialization
 
   local function feval (_)
