@@ -1,6 +1,8 @@
 # Exclude large data
 train/
 test/
+train.t7
+validate.t7
 
 # Compiled Lua sources
 luac.out
