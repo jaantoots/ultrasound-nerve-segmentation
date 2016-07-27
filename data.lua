@@ -103,7 +103,13 @@ local function nextImage ()
     iteration = 0
   end
   iteration = iteration + 1
-  return data.train[shuffle[iteration]]
+  -- Load the images from files and normalize
+  local image = data.dir .. '/' .. data.train[shuffle[iteration]]
+  local input = gm.Image(image .. '.tif'):size(data.width, data.height):
+    toTensor('double', 'I', 'HW'):add(-data.mean):div(data.std)
+  local label = gm.Image(image .. '_mask.tif'):size(data.width, data.height):
+    toTensor('double', 'I', 'HW')
+  return input, label
 end
 
 -- TODO: Downscaled images should fit to memory: faster not to read from disk
@@ -124,11 +130,7 @@ function data.batch (batchSize)
   local inputs = torch.Tensor(batchSize, 1, data.height, data.width)
   local labels = torch.Tensor(batchSize, data.height, data.width)
   for i = 1, batchSize do
-    local image = data.dir .. '/' .. nextImage()
-    inputs[i][1] = gm.Image(image .. '.tif'):size(data.width, data.height):
-      toTensor('double', 'I', 'HW'):add(-data.mean):div(data.std)
-    labels[i] = gm.Image(image .. '_mask.tif'):size(data.width, data.height):
-      toTensor('double', 'I', 'HW')
+    inputs[i][1], labels[i] = nextImage()
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
   return {inputs = inputs, labels = labels}
