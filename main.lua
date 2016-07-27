@@ -19,7 +19,7 @@ local opts = helpers.opts(args)
 
 -- Dataset handling
 local data = require "data"
-data.init(opts.dataDir, opts.height, opts.width)
+data.load(opts.dataDir, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
 opts.mean, opts.std = data.normalize(opts.mean, opts.std)
 
