@@ -6,29 +6,12 @@ local cudnn = require "cudnn"
 local optim = require "optim"
 local paths = require "paths"
 local json = require "json"
+local argparse = require "argparse"
+local helpers = require "helpers"
 
 -- Enable these for final training
 -- cudnn.benchmark = true
 -- cudnn.fastest = true
-
-local function dice (outputs, targets)
-  -- Calculate accuracy score as Dice coefficient
-  local _, predictions = outputs:max(outputs:dim() - 2)
-  predictions = predictions:squeeze():double() - 1
-  targets = targets:double() - 1
-  -- Numerator
-  local nums = torch.cmul(predictions, targets)
-  nums = nums:sum(nums:dim()):squeeze()
-  nums = nums:sum(nums:dim())
-  -- Denominator
-  local dens = predictions + targets
-  dens = dens:sum(dens:dim()):squeeze()
-  dens = dens:sum(dens:dim())
-  -- Coefficient
-  local coeff = 2*torch.cdiv(nums, dens):squeeze()
-  coeff[coeff:ne(coeff)] = 1 -- by definition if both sets are zero
-  return coeff
-end
 
 -- Load configuration
 local opts
@@ -90,8 +73,8 @@ for i = 1, opts.maxIterations do
     local loss = criterion:forward(outputs, batchLabels)
     local gradLoss = criterion:backward(outputs, batchLabels)
     net:backward(batchInputs, gradLoss)
-    diceValue = dice(outputs, batchLabels)
-    print(i, loss)
+    diceValue = helpers.dice(outputs, batchLabels)
+    print(i, loss, diceValue:mean())
     return loss, gradParams
   end
   local _, fs = optim.rmsprop(feval, params, opts.config)
