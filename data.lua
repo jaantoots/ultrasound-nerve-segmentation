@@ -10,6 +10,12 @@ for i = 39, 47 do
   data.validationSubjects[i] = true
 end
 
+local function iterImages (dname)
+  -- Return an iterator over the TIFF images in directory `dname`
+  return paths.files(dname,
+    function (file) return string.match(file, '%.tif$') end)
+end
+
 function data.init (dir, height, width)
   --[[Initialize data to read from dir and resize images to height and width
 
@@ -26,7 +32,7 @@ function data.init (dir, height, width)
   data.dir = dir
   data.train = {}
   data.validation = {}
-  for file in paths.iterfiles(data.dir) do
+  for file in iterImages(data.dir) do
     local subject = tonumber(string.match(file, '%d+'))
     if not string.match(file, 'mask') then
       -- Divide according to subject number
@@ -47,7 +53,7 @@ end
 function data.weights ()
   -- Calculate proportion of positive area as data is very unbalanced
   local means = {}
-  for file in paths.iterfiles(data.dir) do
+  for file in iterImages(data.dir) do
     if string.match(file, 'mask') then
       local mask = gm.Image(data.dir .. '/' .. file):
         size(data.width, data.height):toTensor('double', 'I', 'HW')
@@ -70,7 +76,7 @@ function data.normalize (mean, std)
   if not mean or not std then
     local means = {}
     local stds = {}
-    for file in paths.iterfiles(data.dir) do
+    for file in iterImages(data.dir) do
       if not string.match(file, 'mask') then
         local img = gm.Image(data.dir .. '/' .. file):
           size(data.width, data.height):toTensor('double', 'I', 'HW')
