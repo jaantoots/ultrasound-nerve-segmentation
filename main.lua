@@ -13,8 +13,8 @@ local optim = require "optim"
 local data = require "data"
 data.init('train', 200, 280)
 -- TODO: Downscaled images should fit to memory: faster not to read from disk
--- TODO: Calculate weights
-local weights = torch.Tensor{0.5, 0.5}
+-- TODO: Read weights
+local weights = data.weights()
 
 -- TODO: Normalize data
 
@@ -74,5 +74,7 @@ for i = 1, maxIterations do
     torch.save('out' .. '/model_' .. i .. '.bin', net)
   end
 end
+
+-- TODO: Calculate accuracy score as Dice coefficient
 
 -- TODO: Validate after maxIterations

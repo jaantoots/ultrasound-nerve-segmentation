@@ -44,6 +44,21 @@ function data.init (dir, height, width)
   print(#data.train, #data.validation, data.width, data.height)
 end
 
+function data.weights ()
+  -- Calculate proportion of positive area as data is very unbalanced
+  local means = {}
+  for file in paths.iterfiles(data.dir) do
+    if string.match(file, 'mask') then
+      local mask = gm.Image(data.dir .. '/' .. file):size(
+        data.width, data.height):toTensor('double', 'I', 'HW')
+      means[#means + 1] = mask:mean()
+    end
+  end
+  local mean = torch.Tensor(means):mean()
+  -- Weights for classes in the corresponding order
+  return torch.Tensor{1, (1 - mean)/mean}
+end
+
 -- Initialize variables for nextImage
 local shuffle
 local iteration
