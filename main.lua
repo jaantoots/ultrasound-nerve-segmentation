@@ -9,8 +9,8 @@ local json = require "json"
 local helpers = require "helpers"
 
 -- Enable these for final training
--- cudnn.benchmark = true
--- cudnn.fastest = true
+cudnn.benchmark = true
+cudnn.fastest = true
 
 -- Parse arguments & load configuration
 local parser = helpers.parser()
