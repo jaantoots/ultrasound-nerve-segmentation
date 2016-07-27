@@ -41,7 +41,7 @@ opts.maxIterations = args.iter and (startIteration + args.iter) or opts.maxItera
   (startIteration + 10000)
 paths.mkdir(opts.output)
 json.save(opts.output .. '/conf.json', opts)
-local logger = optim.Logger(opts.output .. '/accuracy.log')
+local logger = optim.Logger(opts.output .. '/accuracylog.txt')
 logger:setNames{'Iteration', 'Loss', 'Score'}
 
 -- Train the network
