@@ -31,7 +31,7 @@ criterion = criterion:cuda()
 local startIteration = 0
 if args.model then
   net = torch.load(args.model)
-  startIteration = string.match(args.model, '_(%d+)%.bin$') or startIteration
+  startIteration = string.match(args.model, '_(%d+)%.t7$') or startIteration
 else
   net = require "model"
 end
@@ -81,7 +81,7 @@ for i = (startIteration + 1), opts.maxIterations do
   -- Save model
   if math.fmod(i, 1000) == 0 then
     net:clearState()
-    torch.save(opts.outDir .. '/model_' .. i .. '.bin', net)
+    torch.save(opts.outDir .. '/model_' .. i .. '.t7', net)
   end
 end
 

@@ -46,8 +46,30 @@ function data.init (dir, height, width)
   data.height = height
   data.width = width
 
-  print("Train", "Valid.", "Width", "Height")
-  print(#data.train, #data.validation, data.width, data.height)
+  print("Train", "Valid.", "Height", "Width")
+  print(#data.train, #data.validation, data.height, data.width)
+end
+
+function data.serialize (file, names)
+  -- Serialize images in `names` to `file`
+  local inputs = torch.ByteTensor(#names, data.height, data.width)
+  local labels = torch.ByteTensor(#names, data.height, data.width)
+  -- Iterate through images to store them
+  for i, name in pairs(names) do
+    local image = data.dir .. '/' .. name
+    inputs[i] = gm.Image(image .. '.tif'):
+      size(data.width, data.height):toTensor('byte', 'I', 'HW')
+    labels[i] = gm.Image(image .. '_mask.tif'):
+      size(data.width, data.height):toTensor('byte', 'I', 'HW')
+  end
+  -- Store data in file
+  local out = {index = names, inputs = inputs, labels = labels}
+  torch.save(file, out)
+end
+
+function data.load (file)
+  -- Load images from `file`
+  data.data = torch.load(file)
 end
 
 function data.weights ()
