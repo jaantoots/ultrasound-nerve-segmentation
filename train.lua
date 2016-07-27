@@ -37,8 +37,8 @@ else
 end
 
 -- Prepare output
-opts.maxIterations = args.iter and (startIteration + args.iter) or opts.maxIterations or
-  (startIteration + 10000)
+opts.maxIterations = args.iter and (startIteration + args.iter) or
+  opts.maxIterations or (startIteration + 10000)
 paths.mkdir(opts.output)
 json.save(opts.output .. '/conf.json', opts)
 local logger = optim.Logger(opts.output .. '/accuracylog.txt')
