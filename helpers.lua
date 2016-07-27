@@ -9,8 +9,7 @@ function helpers.parser ()
   -- Return argparse object
   local parser = argparse("train.lua",
     "Train a VGG net for ultrasound nerve segmentation.")
-  parser:option("-c --conf", "Configuration file (default: conf.json)",
-    "conf.json")
+  parser:option("-c --conf", "Configuration file.", "conf.json")
   parser:option("-o --output", "Output directory.")
   parser:option("-b --batch", "Batch size.")
   parser:option("-i --iter", "Number of iterations to train.")
