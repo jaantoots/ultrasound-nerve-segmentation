@@ -68,6 +68,7 @@ local params, gradParams = net:getParameters() -- optim requires 1D tensors
 print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
 
+paths.mkdir(opts.outDir)
 json.save(opts.outDir .. '/conf.json', opts)
 local logger = optim.Logger(opts.outDir .. '/accuracy.log')
 logger:setNames{'Iteration', 'Loss', 'Score'}
