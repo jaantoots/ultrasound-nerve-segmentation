@@ -48,7 +48,6 @@ logger:setNames{'Iteration', 'Loss', 'Score'}
 net:training()
 local params, gradParams = net:getParameters() -- optim requires 1D tensors
 local lossWindow = torch.Tensor(10):zero()
-print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
 for i = (startIteration + 1), opts.maxIterations do
   -- Get the minibatch
