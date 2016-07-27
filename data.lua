@@ -49,14 +49,40 @@ function data.weights ()
   local means = {}
   for file in paths.iterfiles(data.dir) do
     if string.match(file, 'mask') then
-      local mask = gm.Image(data.dir .. '/' .. file):size(
-        data.width, data.height):toTensor('double', 'I', 'HW')
+      local mask = gm.Image(data.dir .. '/' .. file):
+        size(data.width, data.height):toTensor('double', 'I', 'HW')
       means[#means + 1] = mask:mean()
     end
   end
   local mean = torch.Tensor(means):mean()
   -- Weights for classes in the corresponding order
   return torch.Tensor{1, (1 - mean)/mean}
+end
+
+function data.normalize (mean, std)
+  --[[ Normalize the images based on the training data
+
+  Parameters
+  ----------
+  mean: (optional) mean to subtract from data, will be calculated if nil
+  std: (optional) std to divide data, will be calculated if nil
+  --]]
+  if not mean or not std then
+    local means = {}
+    local stds = {}
+    for file in paths.iterfiles(data.dir) do
+      if not string.match(file, 'mask') then
+        local img = gm.Image(data.dir .. '/' .. file):
+          size(data.width, data.height):toTensor('double', 'I', 'HW')
+        means[#means + 1] = img:mean()
+        stds[#stds + 1] = img:std()
+      end
+    end
+    mean = torch.Tensor(means):mean()
+    std = torch.Tensor(stds):mean()
+  end
+  data.mean = mean
+  data.std = std
 end
 
 -- Initialize variables for nextImage
@@ -91,10 +117,10 @@ function data.batch (batchSize)
   local labels = torch.Tensor(batchSize, data.height, data.width)
   for i = 1, batchSize do
     local image = data.dir .. '/' .. nextImage()
-    inputs[i][1] = gm.Image(image .. '.tif'):size(
-      data.width, data.height):toTensor('double', 'I', 'HW')
-    labels[i] = gm.Image(image .. '_mask.tif'):size(
-      data.width, data.height):toTensor('double', 'I', 'HW')
+    inputs[i][1] = gm.Image(image .. '.tif'):size(data.width, data.height):
+      toTensor('double', 'I', 'HW'):add(-data.mean):div(data.std)
+    labels[i] = gm.Image(image .. '_mask.tif'):size(data.width, data.height):
+      toTensor('double', 'I', 'HW')
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
   return {inputs = inputs, labels = labels}
