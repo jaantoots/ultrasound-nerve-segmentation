@@ -26,8 +26,8 @@ function helpers.opts (args)
   else
     opts = {}
   end
-  opts.dataDir = opts.dataDir or 'train'
-  opts.outDir = args.output or opts.outDir or 'out/2016-07-27-test'
+  opts.train = opts.train or 'train.t7'
+  opts.output = args.output or opts.output or 'out/2016-07-27-serial'
   opts.height = opts.height or 200
   opts.width = opts.width or 280
   opts.batchSize = args.batch or opts.batchSize or 8

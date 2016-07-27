@@ -19,7 +19,7 @@ local opts = helpers.opts(args)
 
 -- Dataset handling
 local data = require "data"
-data.load(opts.dataDir, opts.height, opts.width)
+data.load(opts.train, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
 opts.mean, opts.std = data.normalize(opts.mean, opts.std)
 
@@ -39,9 +39,9 @@ end
 -- Prepare output
 opts.maxIterations = (startIteration + args.iter) or opts.maxIterations or
   (startIteration + 10000)
-paths.mkdir(opts.outDir)
-json.save(opts.outDir .. '/conf.json', opts)
-local logger = optim.Logger(opts.outDir .. '/accuracy.log')
+paths.mkdir(opts.output)
+json.save(opts.output .. '/conf.json', opts)
+local logger = optim.Logger(opts.output .. '/accuracy.log')
 logger:setNames{'Iteration', 'Loss', 'Score'}
 
 -- Train the network
@@ -81,7 +81,7 @@ for i = (startIteration + 1), opts.maxIterations do
   -- Save model
   if math.fmod(i, 1000) == 0 then
     net:clearState()
-    torch.save(opts.outDir .. '/model_' .. i .. '.t7', net)
+    torch.save(opts.output .. '/model_' .. i .. '.t7', net)
   end
 end
 
