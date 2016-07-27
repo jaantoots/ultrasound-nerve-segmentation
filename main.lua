@@ -42,7 +42,7 @@ opts.outDir = opts.outDir or 'out/2016-07-27-test'
 opts.height = opts.height or 200
 opts.width = opts.width or 280
 
--- Dataset handling methods
+-- Dataset handling
 local data = require "data"
 data.init(opts.dataDir, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
@@ -50,7 +50,7 @@ opts.mean, opts.std = data.normalize(opts.mean, opts.std)
 
 -- Network and loss function
 local net = require "model"
-local criterion = cudnn.SpatialCrossEntropyCriterion(opts.weights)
+local criterion = cudnn.SpatialCrossEntropyCriterion(torch.Tensor(opts.weights))
 criterion = criterion:cuda()
 
 -- Train the network
@@ -101,7 +101,6 @@ for i = 1, opts.maxIterations do
   if i >= 10 then
     logger:add{i, lossWindow:mean(), diceValue:mean()}
   end
-
   -- Save model
   if math.fmod(i, 1000) == 0 then
     net:clearState()

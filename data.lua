@@ -62,7 +62,7 @@ function data.weights ()
   end
   local mean = torch.Tensor(means):mean()
   -- Weights for classes in the corresponding order
-  return torch.Tensor{1, (1 - mean)/mean}
+  return {1, (1 - mean)/mean}
 end
 
 function data.normalize (mean, std)
