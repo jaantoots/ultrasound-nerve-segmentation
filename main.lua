@@ -15,7 +15,7 @@ local function dice (outputs, targets)
   -- Calculate accuracy score as Dice coefficient
   local _, predictions = outputs:max(outputs:dim() - 2)
   predictions = predictions:squeeze():double() - 1
-  targets = targets - 1
+  targets = targets:double() - 1
   -- Numerator
   local nums = torch.cmul(predictions, targets)
   nums = nums:sum(nums:dim()):squeeze()
