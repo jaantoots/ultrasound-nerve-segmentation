@@ -37,7 +37,7 @@ else
 end
 
 -- Prepare output
-opts.maxIterations = (startIteration + args.iter) or opts.maxIterations or
+opts.maxIterations = args.iter and (startIteration + args.iter) or opts.maxIterations or
   (startIteration + 10000)
 paths.mkdir(opts.output)
 json.save(opts.output .. '/conf.json', opts)
