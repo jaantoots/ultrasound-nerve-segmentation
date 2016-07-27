@@ -1,8 +1,43 @@
 local torch = require "torch"
+local paths = require "paths"
+local json = require "json"
+local argparse = require "argparse"
 
 local helpers = {}
 
+function helpers.parser ()
+  -- Return argparse object
+  local parser = argparse("train.lua",
+    "Train a VGG net for ultrasound nerve segmentation.")
+  parser:option("-c --conf", "Configuration file (default: conf.json)",
+    "conf.json")
+  parser:option("-o --output", "Output directory.")
+  parser:option("-b --batch", "Batch size.")
+  parser:option("-i --iter", "Number of iterations to train.")
+  parser:option("-m --model", "Saved model, if continuing training.")
+  return parser
+end
 
+function helpers.opts (args)
+  -- Return opts for training
+  local opts
+  if paths.filep(args.conf) then
+    opts = json.load(args.conf)
+  else
+    opts = {}
+  end
+  opts.dataDir = opts.dataDir or 'train'
+  opts.outDir = args.output or opts.outDir or 'out/2016-07-27-test'
+  opts.height = opts.height or 200
+  opts.width = opts.width or 280
+  opts.batchSize = args.batch or opts.batchSize or 8
+  opts.config = opts.config or {
+    learningRate = 1e-1,
+    alpha = 0.99,
+    epsilon = 1e-6
+  }
+  return opts
+end
 
 function helpers.dice (outputs, targets)
   --[[ Calculate accuracy score as Dice coefficient

@@ -6,40 +6,16 @@ local cudnn = require "cudnn"
 local optim = require "optim"
 local paths = require "paths"
 local json = require "json"
-local argparse = require "argparse"
 local helpers = require "helpers"
 
 -- Enable these for final training
 -- cudnn.benchmark = true
 -- cudnn.fastest = true
 
--- Parse arguments
-local parser = argparse("train.lua",
-  "Train a VGG net for ultrasound nerve segmentation.")
-parser:option("-c --conf", "Configuration file (default: conf.json)",
-  "conf.json")
-parser:option("-o --output", "Output directory.")
-parser:option("-b --batch", "Batch size.")
-parser:option("-i --iter", "Number of iterations to train.")
-parser:option("-m --model", "Saved model, if continuing training.")
+-- Parse arguments & load configuration
+local parser = helpers.parser()
 local args = parser:parse()
--- Load configuration
-local opts
-if paths.filep(args.conf) then
-  opts = json.load(args.conf)
-else
-  opts = {}
-end
-opts.dataDir = opts.dataDir or 'train'
-opts.outDir = args.output or opts.outDir or 'out/2016-07-27-test'
-opts.height = opts.height or 200
-opts.width = opts.width or 280
-opts.batchSize = args.batch or opts.batchSize or 8
-opts.config = opts.config or {
-  learningRate = 1e-1,
-  alpha = 0.99,
-  epsilon = 1e-6
-}
+local opts = helpers.opts(args)
 
 -- Dataset handling
 local data = require "data"
