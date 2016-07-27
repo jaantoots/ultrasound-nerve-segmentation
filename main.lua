@@ -13,6 +13,7 @@ local helpers = require "helpers"
 -- cudnn.benchmark = true
 -- cudnn.fastest = true
 
+-- Parse arguments
 local parser = argparse("train.lua",
   "Train a VGG net for ultrasound nerve segmentation.")
 parser:option("-c --conf", "Configuration file (default: conf.json)",
@@ -33,7 +34,6 @@ opts.dataDir = opts.dataDir or 'train'
 opts.outDir = args.output or opts.outDir or 'out/2016-07-27-test'
 opts.height = opts.height or 200
 opts.width = opts.width or 280
-opts.maxIterations = args.iter or opts.maxIterations or 10000
 opts.batchSize = args.batch or opts.batchSize or 8
 opts.config = opts.config or {
   learningRate = 1e-1,
@@ -47,16 +47,26 @@ data.init(opts.dataDir, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
 opts.mean, opts.std = data.normalize(opts.mean, opts.std)
 
+-- Network and loss function
+local net
+local criterion = cudnn.SpatialCrossEntropyCriterion(torch.Tensor(opts.weights))
+criterion = criterion:cuda()
+-- Load network from file if provided
+local startIteration = 1
+if args.model then
+  net = torch.load(args.model)
+  startIteration = string.match(args.model, '_(%d+)%.bin$') or startIteration
+else
+  net = require "model"
+end
+
 -- Prepare output
+opts.maxIterations = (startIteration + args.iter) or opts.maxIterations or
+  (startIteration + 10000)
 paths.mkdir(opts.outDir)
 json.save(opts.outDir .. '/conf.json', opts)
 local logger = optim.Logger(opts.outDir .. '/accuracy.log')
 logger:setNames{'Iteration', 'Loss', 'Score'}
-
--- Network and loss function
-local net = require "model"
-local criterion = cudnn.SpatialCrossEntropyCriterion(torch.Tensor(opts.weights))
-criterion = criterion:cuda()
 
 -- Train the network
 net:training()
@@ -64,12 +74,11 @@ local params, gradParams = net:getParameters() -- optim requires 1D tensors
 local lossWindow = torch.Tensor(10):zero()
 print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
-for i = 1, opts.maxIterations do
+for i = startIteration, opts.maxIterations do
   -- Get the minibatch
   local batch = data.batch(opts.batchSize)
   local batchInputs = batch.inputs:cuda()
   local batchLabels = batch.labels:cuda()
-  -- TODO: Check weights initialization
   local diceValue
 
   local function feval (_)
