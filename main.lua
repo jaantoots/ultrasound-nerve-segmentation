@@ -13,23 +13,45 @@ local helpers = require "helpers"
 -- cudnn.benchmark = true
 -- cudnn.fastest = true
 
+local parser = argparse("train.lua",
+  "Train a VGG net for ultrasound nerve segmentation.")
+parser:option("-c --conf", "Configuration file (default: conf.json)",
+  "conf.json")
+parser:option("-o --output", "Output directory.")
+parser:option("-b --batch", "Batch size.")
+parser:option("-i --iter", "Number of iterations to train.")
+parser:option("-m --model", "Saved model, if continuing training.")
+local args = parser:parse()
 -- Load configuration
 local opts
-if paths.filep('conf.json') then
-  opts = json.load('conf.json')
+if paths.filep(args.conf) then
+  opts = json.load(args.conf)
 else
   opts = {}
 end
 opts.dataDir = opts.dataDir or 'train'
-opts.outDir = opts.outDir or 'out/2016-07-27-test'
+opts.outDir = args.output or opts.outDir or 'out/2016-07-27-test'
 opts.height = opts.height or 200
 opts.width = opts.width or 280
+opts.maxIterations = args.iter or opts.maxIterations or 10000
+opts.batchSize = args.batch or opts.batchSize or 8
+opts.config = opts.config or {
+  learningRate = 1e-1,
+  alpha = 0.99,
+  epsilon = 1e-6
+}
 
 -- Dataset handling
 local data = require "data"
 data.init(opts.dataDir, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
 opts.mean, opts.std = data.normalize(opts.mean, opts.std)
+
+-- Prepare output
+paths.mkdir(opts.outDir)
+json.save(opts.outDir .. '/conf.json', opts)
+local logger = optim.Logger(opts.outDir .. '/accuracy.log')
+logger:setNames{'Iteration', 'Loss', 'Score'}
 
 -- Network and loss function
 local net = require "model"
@@ -38,26 +60,10 @@ criterion = criterion:cuda()
 
 -- Train the network
 net:training()
--- TODO: Create argparser and config file
-opts.maxIterations = opts.maxIterations or 1000
-opts.batchSize = opts.batchSize or 8
-opts.config = opts.config or {
-  learningRate = 1e-1,
-  alpha = 0.99,
-  epsilon = 1e-6
-}
-
 local params, gradParams = net:getParameters() -- optim requires 1D tensors
+local lossWindow = torch.Tensor(10):zero()
 print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
-
-paths.mkdir(opts.outDir)
-json.save(opts.outDir .. '/conf.json', opts)
-local logger = optim.Logger(opts.outDir .. '/accuracy.log')
-logger:setNames{'Iteration', 'Loss', 'Score'}
--- TODO: Add accuracy function
-local lossWindow = torch.Tensor(10):zero()
-
 for i = 1, opts.maxIterations do
   -- Get the minibatch
   local batch = data.batch(opts.batchSize)
