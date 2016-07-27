@@ -37,13 +37,14 @@ if paths.filep('conf.json') then
 else
   opts = {}
 end
-opts.dir = opts.dir or 'train'
+opts.dataDir = opts.dataDir or 'train'
+opts.outDir = opts.outDir or 'out/2016-07-27-test'
 opts.height = opts.height or 200
 opts.width = opts.width or 280
 
 -- Dataset handling methods
 local data = require "data"
-data.init(opts.dir, opts.height, opts.width)
+data.init(opts.dataDir, opts.height, opts.width)
 opts.weights = opts.weights or data.weights()
 opts.mean, opts.std = data.normalize(opts.mean, opts.std)
 
@@ -67,8 +68,8 @@ local params, gradParams = net:getParameters() -- optim requires 1D tensors
 print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
 
-json.save('out/conf.json', opts)
-local logger = optim.Logger('out/accuracy.log')
+json.save(opts.outDir .. '/conf.json', opts)
+local logger = optim.Logger(opts.outDir .. '/accuracy.log')
 logger:setNames{'Iteration', 'Loss', 'Score'}
 -- TODO: Add accuracy function
 local lossWindow = torch.Tensor(10):zero()
@@ -103,7 +104,7 @@ for i = 1, opts.maxIterations do
   -- Save model
   if math.fmod(i, 1000) == 0 then
     net:clearState()
-    torch.save('out' .. '/model_' .. i .. '.bin', net)
+    torch.save(opts.outDir .. '/model_' .. i .. '.bin', net)
   end
 end
 
