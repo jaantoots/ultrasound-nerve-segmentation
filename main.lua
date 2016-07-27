@@ -28,7 +28,7 @@ local net
 local criterion = cudnn.SpatialCrossEntropyCriterion(torch.Tensor(opts.weights))
 criterion = criterion:cuda()
 -- Load network from file if provided
-local startIteration = 1
+local startIteration = 0
 if args.model then
   net = torch.load(args.model)
   startIteration = string.match(args.model, '_(%d+)%.bin$') or startIteration
@@ -50,7 +50,7 @@ local params, gradParams = net:getParameters() -- optim requires 1D tensors
 local lossWindow = torch.Tensor(10):zero()
 print("Check parameters:", params:mean(), params:std())
 print("==> Start training: " .. params:nElement() .. " parameters")
-for i = startIteration, opts.maxIterations do
+for i = (startIteration + 1), opts.maxIterations do
   -- Get the minibatch
   local batch = data.batch(opts.batchSize)
   local batchInputs = batch.inputs:cuda()
@@ -60,10 +60,13 @@ for i = startIteration, opts.maxIterations do
   local function feval (_)
     -- For optim, outputs f(X): loss and df/dx: gradients
     gradParams:zero()
+    -- Forward pass
     local outputs = net:forward(batchInputs)
     local loss = criterion:forward(outputs, batchLabels)
+    -- Backpropagation
     local gradLoss = criterion:backward(outputs, batchLabels)
     net:backward(batchInputs, gradLoss)
+    -- Statistics
     diceValue = helpers.dice(outputs, batchLabels)
     print(i, loss, diceValue:mean())
     return loss, gradParams
