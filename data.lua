@@ -83,6 +83,7 @@ function data.normalize (mean, std)
   end
   data.mean = mean
   data.std = std
+  return data.mean, data.std
 end
 
 -- Initialize variables for nextImage
@@ -99,6 +100,7 @@ local function nextImage ()
   return data.train[shuffle[iteration]]
 end
 
+-- TODO: Downscaled images should fit to memory: faster not to read from disk
 function data.batch (batchSize)
   --[[Return a minibatch of data.training data
 
