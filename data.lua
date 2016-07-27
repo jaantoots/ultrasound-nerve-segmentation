@@ -52,15 +52,15 @@ end
 
 function data.serialize (file, names)
   -- Serialize images in `names` to `file`
-  local inputs = torch.ByteTensor(#names, data.height, data.width)
-  local labels = torch.ByteTensor(#names, data.height, data.width)
+  local inputs = torch.Tensor(#names, data.height, data.width)
+  local labels = torch.Tensor(#names, data.height, data.width)
   -- Iterate through images to store them
   for i, name in pairs(names) do
     local image = data.dir .. '/' .. name
     inputs[i] = gm.Image(image .. '.tif'):
-      size(data.width, data.height):toTensor('byte', 'I', 'HW')
+      size(data.width, data.height):toTensor('double', 'I', 'HW')
     labels[i] = gm.Image(image .. '_mask.tif'):
-      size(data.width, data.height):toTensor('byte', 'I', 'HW')
+      size(data.width, data.height):toTensor('double', 'I', 'HW')
   end
   -- Store data in file
   local out = {index = names, inputs = inputs, labels = labels}
@@ -165,8 +165,8 @@ local function nextImageMemory ()
   iteration = iteration + 1
   -- Load the images from files and normalize
   local i = shuffle[iteration]
-  local input = data.data.inputs[i]:double():add(-data.mean):div(data.std)
-  local label = data.data.labels[i]:double()
+  local input = data.data.inputs[i]:add(-data.mean):div(data.std)
+  local label = data.data.labels[i]
   return input, label
 end
 
