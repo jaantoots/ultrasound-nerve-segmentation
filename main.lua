@@ -11,6 +11,25 @@ local json = require "json"
 -- cudnn.benchmark = true
 -- cudnn.fastest = true
 
+local function dice (outputs, targets)
+  -- Calculate accuracy score as Dice coefficient
+  local _, predictions = outputs:max(outputs:dim() - 2)
+  predictions = predictions:squeeze():double() - 1
+  targets = targets - 1
+  -- Numerator
+  local nums = torch.cmul(predictions, targets)
+  nums = nums:sum(nums:dim()):squeeze()
+  nums = nums:sum(nums:dim())
+  -- Denominator
+  local dens = predictions + targets
+  dens = dens:sum(dens:dim()):squeeze()
+  dens = dens:sum(dens:dim())
+  -- Coefficient
+  local coeff = 2*torch.cdiv(nums, dens):squeeze()
+  coeff[coeff:ne(coeff)] = 1 -- by definition if both sets are zero
+  return coeff
+end
+
 -- Load configuration
 local opts
 if paths.filep('conf.json') then
@@ -50,7 +69,7 @@ print("==> Start training: " .. params:nElement() .. " parameters")
 
 json.save('out/conf.json', opts)
 local logger = optim.Logger('out/accuracy.log')
-logger:setNames{'Iteration', 'Loss'}
+logger:setNames{'Iteration', 'Loss', 'Score'}
 -- TODO: Add accuracy function
 local lossWindow = torch.Tensor(10):zero()
 
@@ -60,6 +79,7 @@ for i = 1, opts.maxIterations do
   local batchInputs = batch.inputs:cuda()
   local batchLabels = batch.labels:cuda()
   -- TODO: Check weights initialization
+  local diceValue
 
   local function feval (_)
     -- For optim, outputs f(X): loss and df/dx: gradients
@@ -68,6 +88,7 @@ for i = 1, opts.maxIterations do
     local loss = criterion:forward(outputs, batchLabels)
     local gradLoss = criterion:backward(outputs, batchLabels)
     net:backward(batchInputs, gradLoss)
+    diceValue = dice(outputs, batchLabels)
     print(i, loss)
     return loss, gradParams
   end
@@ -76,7 +97,7 @@ for i = 1, opts.maxIterations do
   -- Log loss
   lossWindow[math.fmod(i, 10) + 1] = fs[1]
   if i >= 10 then
-    logger:add{i, lossWindow:mean()}
+    logger:add{i, lossWindow:mean(), diceValue:mean()}
   end
 
   -- Save model
@@ -85,7 +106,5 @@ for i = 1, opts.maxIterations do
     torch.save('out' .. '/model_' .. i .. '.bin', net)
   end
 end
-
--- TODO: Calculate accuracy score as Dice coefficient
 
 -- TODO: Validate after maxIterations
