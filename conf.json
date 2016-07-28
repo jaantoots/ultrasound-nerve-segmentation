@@ -2,14 +2,14 @@
     "std": 0.2155469072352,
     "mean": 0.38984939490739,
     "weights": [
-	1,
-	81.918007269003
+        1,
+        9.0508567146433
     ],
     "batchSize": 8,
     "config": {
-	"learningRate": 0.1,
-	"alpha": 0.99,
-	"epsilon": 1e-06
+        "learningRate": 0.1,
+        "alpha": 0.99,
+        "epsilon": 1e-06
     },
     "height": 200,
     "width":280
