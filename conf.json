@@ -7,9 +7,10 @@
     ],
     "batchSize": 8,
     "config": {
-        "learningRate": 0.1,
-        "alpha": 0.99,
-        "epsilon": 1e-06
+        "learningRate": 1e-02,
+        "beta1": 0.9,
+        "beta2": 0.999,
+        "epsilon": 1e-08
     },
     "height": 200,
     "width":280

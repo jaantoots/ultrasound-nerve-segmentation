@@ -71,7 +71,7 @@ for i = (startIteration + 1), opts.maxIterations do
     print(i, loss, diceValue:mean())
     return loss, gradParams
   end
-  local _, fs = optim.rmsprop(feval, params, opts.config)
+  local _, fs = optim.adam(feval, params, opts.config)
 
   -- Log loss
   lossWindow[math.fmod(i, 10) + 1] = fs[1]
