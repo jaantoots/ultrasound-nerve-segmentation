@@ -48,6 +48,7 @@ logger:setNames{'Iteration', 'Loss', 'Score'}
 net:training()
 local params, gradParams = net:getParameters() -- optim requires 1D tensors
 local lossWindow = torch.Tensor(10):zero()
+local diceWindow = torch.Tensor(10):zero()
 print("==> Start training: " .. params:nElement() .. " parameters")
 for i = (startIteration + 1), opts.maxIterations do
   -- Get the minibatch
@@ -74,8 +75,9 @@ for i = (startIteration + 1), opts.maxIterations do
 
   -- Log loss
   lossWindow[math.fmod(i, 10) + 1] = fs[1]
+  diceWindow[math.fmod(i, 10) + 1] = diceValue:mean()
   if i >= 10 then
-    logger:add{i, lossWindow:mean(), diceValue:mean()}
+    logger:add{i, lossWindow:mean(), diceWindow:mean()}
   end
   -- Save model
   if math.fmod(i, 1000) == 0 then
