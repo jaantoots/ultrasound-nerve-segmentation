@@ -23,7 +23,7 @@ function Data:__init (file, height, width, validationSubjects)
   else
     -- Initialize validation subjects definition
     self.validationSubjects = {}
-    for _,subject in pairs(validationSubjects) do
+    for _, subject in pairs(validationSubjects) do
       self.validationSubjects[subject] = true
     end
     self:_loadDir(file, height, width)
@@ -55,13 +55,13 @@ function Data:_loadDir (dir, height, width)
   self.dir = dir
   -- Create lists of filenames
   self.train = {}
-  self.validation = {}
+  self.validate = {}
   for file in iterImages(self.dir) do
     local subject = tonumber(string.match(file, '%d+'))
     if not string.match(file, 'mask') then
       -- Divide according to subject number
       if self.validationSubjects[subject] then
-        self.validation[#self.validation + 1] = string.match(file, '%d+_%d+')
+        self.validate[#self.validate + 1] = string.match(file, '%d+_%d+')
       else
         self.train[#self.train + 1] = string.match(file, '%d+_%d+')
       end
@@ -72,7 +72,7 @@ function Data:_loadDir (dir, height, width)
   self.width = width
 
   print("Train", "Valid.", "Height", "Width")
-  print(#self.train, #self.validation, self.height, self.width)
+  print(#self.train, #self.validate, self.height, self.width)
 end
 
 function Data:serialize (file, names)
@@ -133,7 +133,7 @@ function Data:normalize (mean, std)
         stds[#stds + 1] = img:std()
     end
     if self.data then
-      for i=1,self.size do
+      for i = 1, self.size do
         addImg(self.data.inputs[i])
       end
     else
