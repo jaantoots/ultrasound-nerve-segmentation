@@ -26,7 +26,8 @@ function helpers.opts (args)
     opts = {}
   end
   opts.train = opts.train or 'train.t7'
-  opts.output = args.output or opts.output or 'out/2016-07-27-serial'
+  opts.output = args.output or opts.output or
+    'out/' .. os.date('%Y-%m-%d-%H-%M-%S')
   opts.height = opts.height or 200
   opts.width = opts.width or 280
   opts.weights = opts.weights or {1, 1}
