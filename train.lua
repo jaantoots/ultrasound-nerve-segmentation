@@ -24,7 +24,7 @@ local trainData = data.new(opts.train,
 opts.mean, opts.std = trainData:normalize(opts.mean, opts.std)
 
 -- Network and loss function
-local net
+local net = require "model"
 local criterion = cudnn.SpatialCrossEntropyCriterion(torch.Tensor(opts.weights))
 criterion = criterion:cuda()
 -- Load network from file if provided
@@ -32,8 +32,6 @@ local startIteration = 0
 if args.model then
   net = torch.load(args.model)
   startIteration = string.match(args.model, '_(%d+)%.t7$') or startIteration
-else
-  net = require "model"
 end
 
 -- Prepare output
@@ -43,12 +41,12 @@ paths.mkdir(opts.output)
 json.save(opts.output .. '/conf.json', opts)
 local logger = optim.Logger(opts.output .. '/accuracylog.txt')
 logger:setNames{'Iteration', 'Loss', 'Score'}
+local lossWindow = torch.Tensor(10):zero()
+local diceWindow = torch.Tensor(10):zero()
 
 -- Train the network
 net:training()
 local params, gradParams = net:getParameters() -- optim requires 1D tensors
-local lossWindow = torch.Tensor(10):zero()
-local diceWindow = torch.Tensor(10):zero()
 print("==> Start training: " .. params:nElement() .. " parameters")
 for i = (startIteration + 1), opts.maxIterations do
   -- Get the minibatch
@@ -85,5 +83,3 @@ for i = (startIteration + 1), opts.maxIterations do
     torch.save(opts.output .. '/model_' .. i .. '.t7', net)
   end
 end
-
--- TODO: Validate after maxIterations
