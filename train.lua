@@ -6,6 +6,7 @@ local cudnn = require "cudnn"
 local optim = require "optim"
 local paths = require "paths"
 local json = require "json"
+local data = require "data"
 local helpers = require "helpers"
 
 -- Enable these for final training
@@ -17,11 +18,10 @@ local parser = helpers.parser()
 local args = parser:parse()
 local opts = helpers.opts(args)
 
--- Dataset handling
-local data = require "data"
-data.load(opts.train, opts.height, opts.width)
-opts.weights = opts.weights or data.weights()
-opts.mean, opts.std = data.normalize(opts.mean, opts.std)
+-- Initialize and normalize training data
+local trainData = data.new(opts.train,
+  opts.height, opts.width, opts.validationSubjects)
+opts.mean, opts.std = trainData:normalize(opts.mean, opts.std)
 
 -- Network and loss function
 local net
@@ -52,7 +52,7 @@ local diceWindow = torch.Tensor(10):zero()
 print("==> Start training: " .. params:nElement() .. " parameters")
 for i = (startIteration + 1), opts.maxIterations do
   -- Get the minibatch
-  local batch = data.batch(opts.batchSize)
+  local batch = trainData:batch(opts.batchSize)
   local batchInputs = batch.inputs:cuda()
   local batchLabels = batch.labels:cuda()
   local diceValue

@@ -2,12 +2,35 @@ local torch = require "torch"
 local paths = require "paths"
 local gm = require "graphicsmagick"
 
-local data = {} -- Return variable
+local Data = torch.class('Data')
 
--- Vanilla validation set definition
-data.validationSubjects = {}
-for i = 39, 47 do
-  data.validationSubjects[i] = true
+function Data:__init (file, height, width, validationSubjects)
+  --[[ Load the data
+
+  This high-level function handles loading images from either a serialized file
+  or a directory containing the original data, depending on the first argument.
+
+  Parameters
+  ----------
+  file: file containing serialized images or directory containing the data
+  The following parameters are ignored if `file` is an existing file:
+  height: height for resizing
+  width: width for resizing
+  validationSubjects: list of subjects in the validation set
+  --]]
+  if paths.filep(file) then
+    self:_loadFile(file)
+  else
+    -- Initialize validation subjects definition
+    self.validationSubjects = {}
+    for _,subject in pairs(validationSubjects) do
+      self.validationSubjects[subject] = true
+    end
+    self:_loadDir(file, height, width)
+  end
+  -- Initialize variables for nextImage
+  self.shuffle = nil
+  self.iteration = self.size
 end
 
 local function iterImages (dname)
@@ -16,8 +39,8 @@ local function iterImages (dname)
     function (file) return string.match(file, '%.tif$') end)
 end
 
-function data._init (dir, height, width)
-  --[[Initialize data to read from dir and resize images to height and width
+function Data:_loadDir (dir, height, width)
+  --[[Initialize data from `dir` and resize images to `height` and `width`
 
   Parameters
   ----------
@@ -29,79 +52,64 @@ function data._init (dir, height, width)
   -------
   Print number of images in training and validation sets and the specified size
   --]]
-  data.dir = dir
-  data.train = {}
-  data.validation = {}
-  for file in iterImages(data.dir) do
+  self.dir = dir
+  -- Create lists of filenames
+  self.train = {}
+  self.validation = {}
+  for file in iterImages(self.dir) do
     local subject = tonumber(string.match(file, '%d+'))
     if not string.match(file, 'mask') then
       -- Divide according to subject number
-      if data.validationSubjects[subject] then
-        data.validation[#data.validation + 1] = string.match(file, '%d+_%d+')
+      if self.validationSubjects[subject] then
+        self.validation[#self.validation + 1] = string.match(file, '%d+_%d+')
       else
-        data.train[#data.train + 1] = string.match(file, '%d+_%d+')
+        self.train[#self.train + 1] = string.match(file, '%d+_%d+')
       end
     end
   end
-  data.height = height
-  data.width = width
+  self.size = #self.train
+  self.height = height
+  self.width = width
 
   print("Train", "Valid.", "Height", "Width")
-  print(#data.train, #data.validation, data.height, data.width)
+  print(#self.train, #self.validation, self.height, self.width)
 end
 
-function data.serialize (file, names)
+function Data:serialize (file, names)
   -- Serialize images in `names` to `file`
-  local inputs = torch.Tensor(#names, data.height, data.width)
-  local labels = torch.Tensor(#names, data.height, data.width)
+  local inputs = torch.Tensor(#names, self.height, self.width)
+  local labels = torch.Tensor(#names, self.height, self.width)
   -- Iterate through images to store them
   for i, name in pairs(names) do
-    local image = data.dir .. '/' .. name
+    local image = self.dir .. '/' .. name
     inputs[i] = gm.Image(image .. '.tif'):
-      size(data.width, data.height):toTensor('double', 'I', 'HW')
+      size(self.width, self.height):toTensor('double', 'I', 'HW')
     labels[i] = gm.Image(image .. '_mask.tif'):
-      size(data.width, data.height):toTensor('double', 'I', 'HW')
+      size(self.width, self.height):toTensor('double', 'I', 'HW')
   end
   -- Store data in file
   local out = {index = names, inputs = inputs, labels = labels}
   torch.save(file, out)
 end
 
-function data._load (file)
+function Data:_loadFile (file)
   -- Load images from `file`
-  data.data = torch.load(file)
-  local size = data.data.inputs:size()
-  data.size = size[1]
-  data.height = size[2]
-  data.width = size[3]
+  self.data = torch.load(file)
+  local size = self.data.inputs:size()
+  self.size = size[1]
+  self.height = size[2]
+  self.width = size[3]
   print("Train", "Height", "Width")
-  print(size[1], data.height, data.width)
+  print(self.size, self.height, self.width)
 end
 
-function data.load (file, height, width)
-  --[[ Load the data
-
-  Parameters
-  ----------
-  file: file containing serialized images or directory containing the data
-  height: height for resizing, ignored if loading from serialized file
-  width: width for resizing, ignored if loading from serialized file
-  --]]
-  if paths.filep(file) then
-    data._load(file)
-  else
-    data._init(file, height, width)
-  end
-end
-
-function data.weights ()
-  -- Calculate proportion of positive area as data is very unbalanced
+function Data:weights ()
+  -- Calculate proportion of positive area in the data
   local means = {}
-  for file in iterImages(data.dir) do
+  for file in iterImages(self.dir) do
     if string.match(file, 'mask') then
-      local mask = gm.Image(data.dir .. '/' .. file):
-        size(data.width, data.height):toTensor('double', 'I', 'HW')
-      means[#means + 1] = mask:mean()
+      means[#means + 1] = gm.Image(self.dir .. '/' .. file):
+        size(self.width, self.height):toTensor('double', 'I', 'HW'):mean()
     end
   end
   local mean = torch.Tensor(means):mean()
@@ -109,7 +117,7 @@ function data.weights ()
   return {mean, 1 - mean}
 end
 
-function data.normalize (mean, std)
+function Data:normalize (mean, std)
   --[[ Normalize the images based on the training data
 
   Parameters
@@ -120,59 +128,50 @@ function data.normalize (mean, std)
   if not mean or not std then
     local means = {}
     local stds = {}
-    for file in iterImages(data.dir) do
-      if not string.match(file, 'mask') then
-        local img = gm.Image(data.dir .. '/' .. file):
-          size(data.width, data.height):toTensor('double', 'I', 'HW')
+    local function addImg (img)
         means[#means + 1] = img:mean()
         stds[#stds + 1] = img:std()
+    end
+    if self.data then
+      for i=1,self.size do
+        addImg(self.data.inputs[i])
       end
+    else
+      for file in iterImages(self.dir) do
+        if not string.match(file, 'mask') then
+          addImg(gm.Image(self.dir .. '/' .. file):
+            size(self.width, self.height):toTensor('double', 'I', 'HW'))
+        end
+    end
     end
     mean = torch.Tensor(means):mean()
     std = torch.Tensor(stds):mean()
   end
-  data.mean = mean
-  data.std = std
-  return data.mean, data.std
+  self.mean = mean
+  self.std = std
+  return self.mean, self.std
 end
 
--- Initialize variables for nextImage
-local shuffle
-local iteration
-local function nextImageDisk ()
-  -- Return the next image from a random permutation of the training dataset
-  if iteration == nil or iteration >= #data.train then
-    -- Move to next epoch as necessary
-    shuffle = torch.randperm(#data.train)
-    iteration = 0
-  end
-  iteration = iteration + 1
-  -- Load the images from files and normalize
-  local image = data.dir .. '/' .. data.train[shuffle[iteration]]
-  local input = gm.Image(image .. '.tif'):size(data.width, data.height):
-    toTensor('double', 'I', 'HW'):add(-data.mean):div(data.std)
-  local label = gm.Image(image .. '_mask.tif'):size(data.width, data.height):
+function Data:_nextImageDisk ()
+  -- Load the images from disk and normalize
+  local image = self.dir .. '/' .. self.train[self.shuffle[self.iteration]]
+  local input = gm.Image(image .. '.tif'):size(self.width, self.height):
+    toTensor('double', 'I', 'HW'):add(-self.mean):div(self.std)
+  local label = gm.Image(image .. '_mask.tif'):size(self.width, self.height):
     toTensor('double', 'I', 'HW')
   return input, label
 end
-local function nextImageMemory ()
-  -- Return the next image from a random permutation of the training dataset
-  if iteration == nil or iteration >= data.size then
-    -- Move to next epoch as necessary
-    shuffle = torch.randperm(data.size)
-    iteration = 0
-  end
-  iteration = iteration + 1
-  -- Load the images from files and normalize
-  local i = shuffle[iteration]
-  local input = data.data.inputs[i]:add(-data.mean):div(data.std)
-  local label = data.data.labels[i]
+
+function Data:_nextImageMemory ()
+  -- Return normalized images from loaded file
+  local i = self.shuffle[self.iteration]
+  local input = self.data.inputs[i]:add(-self.mean):div(self.std)
+  local label = self.data.labels[i]
   return input, label
 end
 
--- TODO: Downscaled images should fit to memory: faster not to read from disk
-function data.batch (batchSize)
-  --[[Return a minibatch of data.training data
+function Data:batch (batchSize)
+  --[[Return a minibatch of training data
 
   Parameters
   ----------
@@ -182,20 +181,27 @@ function data.batch (batchSize)
   -------
   batch: table
     inputs: torch.Tensor of size batchSize x width x height containing the input
-        image for data.training
+        image for training
     labels: torch.Tensor of the same size containing class indices
   --]]
-  local inputs = torch.Tensor(batchSize, 1, data.height, data.width)
-  local labels = torch.Tensor(batchSize, data.height, data.width)
+  local inputs = torch.Tensor(batchSize, 1, self.height, self.width)
+  local labels = torch.Tensor(batchSize, self.height, self.width)
   for i = 1, batchSize do
-    if data.data then
-      inputs[i][1], labels[i] = nextImageMemory()
+    -- Get the next image from a random permutation of the training dataset
+    if self.iteration >= self.size then
+      -- Move to next epoch as necessary
+      self.shuffle = torch.randperm(self.size)
+      self.iteration = 0
+    end
+    self.iteration = self.iteration + 1
+    if self.data then
+      inputs[i][1], labels[i] = self:_nextImageMemory()
     else
-      inputs[i][1], labels[i] = nextImageDisk()
+      inputs[i][1], labels[i] = self:_nextImageDisk()
     end
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
   return {inputs = inputs, labels = labels}
 end
 
-return data
+return Data

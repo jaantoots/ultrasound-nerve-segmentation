@@ -13,5 +13,16 @@
         "epsilon": 1e-08
     },
     "height": 200,
-    "width":280
+    "width":280,
+    "validationSubjects": [
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47
+    ]
 }

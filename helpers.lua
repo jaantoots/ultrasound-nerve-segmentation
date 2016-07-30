@@ -29,6 +29,7 @@ function helpers.opts (args)
   opts.output = args.output or opts.output or 'out/2016-07-27-serial'
   opts.height = opts.height or 200
   opts.width = opts.width or 280
+  opts.weights = opts.weights or {1, 1}
   opts.batchSize = args.batch or opts.batchSize or 8
   opts.config = opts.config or {
     learningRate = 1e-1,
