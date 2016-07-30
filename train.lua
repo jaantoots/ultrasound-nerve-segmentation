@@ -14,7 +14,7 @@ cudnn.benchmark = true
 cudnn.fastest = true
 
 -- Parse arguments & load configuration
-local parser = helpers.parser()
+local parser = helpers.trainParser()
 local args = parser:parse()
 local opts = helpers.opts(args)
 

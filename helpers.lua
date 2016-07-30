@@ -5,7 +5,7 @@ local argparse = require "argparse"
 
 local helpers = {}
 
-function helpers.parser ()
+function helpers.trainParser ()
   -- Return argparse object
   local parser = argparse("train.lua",
     "Train a VGG net for ultrasound nerve segmentation.")
@@ -17,6 +17,17 @@ function helpers.parser ()
   return parser
 end
 
+function helpers.validateParser ()
+  -- Return argparse object
+  local parser = argparse("validate.lua",
+    "Validate a model for ultrasound nerve segmentation.")
+  parser:argument("model", "Model to validate.")
+  parser:option("-c --conf", "Configuration file.", "conf.json")
+  parser:option("-o --output", "Output directory (usually model directory).")
+  parser:option("-b --batch", "Batch size.")
+  return parser
+end
+
 function helpers.opts (args)
   -- Return opts for training
   local opts
@@ -25,7 +36,8 @@ function helpers.opts (args)
   else
     opts = {}
   end
-  opts.train = opts.train or 'train.t7'
+  opts.train = opts.train or 'train'
+  opts.validate = opts.validate or 'train'
   opts.output = args.output or opts.output or
     'out/' .. os.date('%Y-%m-%d-%H-%M-%S')
   opts.height = opts.height or 200

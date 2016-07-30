@@ -4,7 +4,7 @@ local gm = require "graphicsmagick"
 
 local Data = torch.class('Data')
 
-function Data:__init (file, height, width, validationSubjects)
+function Data:__init (file, height, width, validationSubjects, isValidate)
   --[[ Load the data
 
   This high-level function handles loading images from either a serialized file
@@ -28,6 +28,7 @@ function Data:__init (file, height, width, validationSubjects)
     end
     self:_loadDir(file, height, width)
   end
+  self.isValidate = isValidate or false
   -- Initialize variables for nextImage
   self.shuffle = nil
   self.iteration = self.size
@@ -154,7 +155,12 @@ end
 
 function Data:_nextImageDisk ()
   -- Load the images from disk and normalize
-  local image = self.dir .. '/' .. self.train[self.shuffle[self.iteration]]
+  local image
+  if self.isValidate then
+    image = self.dir .. '/' .. self.validate[self.shuffle[self.iteration]]
+  else
+    image = self.dir .. '/' .. self.train[self.shuffle[self.iteration]]
+  end
   local input = gm.Image(image .. '.tif'):size(self.width, self.height):
     toTensor('double', 'I', 'HW'):add(-self.mean):div(self.std)
   local label = gm.Image(image .. '_mask.tif'):size(self.width, self.height):
@@ -170,7 +176,7 @@ function Data:_nextImageMemory ()
   return input, label
 end
 
-function Data:batch (batchSize)
+function Data:batch (batchSize, noShuffle)
   --[[Return a minibatch of training data
 
   Parameters
@@ -190,7 +196,11 @@ function Data:batch (batchSize)
     -- Get the next image from a random permutation of the training dataset
     if self.iteration >= self.size then
       -- Move to next epoch as necessary
-      self.shuffle = torch.randperm(self.size)
+      if noShuffle then
+        self.shuffle = torch.range(1, self.size)
+      else
+        self.shuffle = torch.randperm(self.size)
+      end
       self.iteration = 0
     end
     self.iteration = self.iteration + 1

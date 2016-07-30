@@ -1,4 +1,6 @@
 {
+    "train": "train.t7",
+    "validate": "validate.t7",
     "std": 0.2155469072352,
     "mean": 0.38984939490739,
     "weights": [
