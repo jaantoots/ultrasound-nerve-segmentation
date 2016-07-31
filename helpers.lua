@@ -23,7 +23,6 @@ function helpers.validateParser ()
     "Validate a model for ultrasound nerve segmentation.")
   parser:argument("model", "Model to validate.")
   parser:option("-c --conf", "Configuration file.", "conf.json")
-  parser:option("-o --output", "Output directory (usually model directory).")
   parser:option("-b --batch", "Batch size.")
   return parser
 end

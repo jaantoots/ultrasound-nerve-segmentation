@@ -4,7 +4,6 @@ require "nn"
 require "cunn"
 local cudnn = require "cudnn"
 local optim = require "optim"
-local paths = require "paths"
 local json = require "json"
 local data = require "data"
 local helpers = require "helpers"
@@ -31,12 +30,9 @@ local net = torch.load(args.model)
 local modelName = string.match(args.model, '(.*)%.t7$')
 
 -- Prepare output
-paths.mkdir(opts.output)
-local trainLogger = optim.Logger(
-  opts.output .. '/' .. modelName .. '-train.txt')
+local trainLogger = optim.Logger(modelName .. '-train.txt')
 trainLogger:setNames{'Name', 'Score'}
-local validateLogger = optim.Logger(
-  opts.output .. '/' .. modelName .. '-validate.txt')
+local validateLogger = optim.Logger(modelName .. '-validate.txt')
 trainLogger:setNames{'Name', 'Score'}
 
 -- Evaluate the network
