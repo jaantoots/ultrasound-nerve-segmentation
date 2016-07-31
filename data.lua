@@ -157,15 +157,16 @@ function Data:_nextImageDisk ()
   -- Load the images from disk and normalize
   local image
   if self.isValidate then
-    image = self.dir .. '/' .. self.validate[self.shuffle[self.iteration]]
+    image = self.validate[self.shuffle[self.iteration]]
   else
-    image = self.dir .. '/' .. self.train[self.shuffle[self.iteration]]
+    image = self.train[self.shuffle[self.iteration]]
   end
-  local input = gm.Image(image .. '.tif'):size(self.width, self.height):
-    toTensor('double', 'I', 'HW'):add(-self.mean):div(self.std)
-  local label = gm.Image(image .. '_mask.tif'):size(self.width, self.height):
-    toTensor('double', 'I', 'HW')
-  return input, label
+  local input = gm.Image(self.dir .. '/' .. image .. '.tif')
+    :size(self.width, self.height):toTensor('double', 'I', 'HW')
+    :add(-self.mean):div(self.std)
+  local label = gm.Image(self.dir .. '/' .. image .. '_mask.tif')
+    :size(self.width, self.height):toTensor('double', 'I', 'HW')
+  return input, label, image
 end
 
 function Data:_nextImageMemory ()
@@ -173,7 +174,8 @@ function Data:_nextImageMemory ()
   local i = self.shuffle[self.iteration]
   local input = self.data.inputs[i]:add(-self.mean):div(self.std)
   local label = self.data.labels[i]
-  return input, label
+  local name = self.data.index[i]
+  return input, label, name
 end
 
 function Data:batch (batchSize, noShuffle)
@@ -192,6 +194,7 @@ function Data:batch (batchSize, noShuffle)
   --]]
   local inputs = torch.Tensor(batchSize, 1, self.height, self.width)
   local labels = torch.Tensor(batchSize, self.height, self.width)
+  local names = {}
   for i = 1, batchSize do
     -- Get the next image from a random permutation of the training dataset
     if self.iteration >= self.size then
@@ -205,13 +208,13 @@ function Data:batch (batchSize, noShuffle)
     end
     self.iteration = self.iteration + 1
     if self.data then
-      inputs[i][1], labels[i] = self:_nextImageMemory()
+      inputs[i][1], labels[i], names[i] = self:_nextImageMemory()
     else
-      inputs[i][1], labels[i] = self:_nextImageDisk()
+      inputs[i][1], labels[i], names[i] = self:_nextImageDisk()
     end
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1
-  return {inputs = inputs, labels = labels}
+  return {inputs = inputs, labels = labels}, names
 end
 
 return Data
