@@ -79,7 +79,7 @@ function helpers.dice (outputs, targets)
   dens = dens:sum(dens:dim())
   -- Coefficient
   local coeffs = 2*torch.cdiv(nums, dens):squeeze()
---  coeffs[coeffs:ne(coeffs)] = 1 -- by definition if both sets are zero
+  coeffs[coeffs:ne(coeffs)] = 1 -- by definition if both sets are zero
   return coeffs
 end
 
