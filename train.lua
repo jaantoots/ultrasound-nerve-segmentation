@@ -66,7 +66,7 @@ for i = (startIteration + 1), opts.maxIterations do
     net:backward(batchInputs, gradLoss)
     -- Statistics
     diceValue = helpers.dice(outputs, batchLabels)
-    print(i, loss, diceValue:mean())
+    print(i, loss, diceValue[1])
     return loss, gradParams
   end
   local _, fs = optim.adam(feval, params, opts.config)
