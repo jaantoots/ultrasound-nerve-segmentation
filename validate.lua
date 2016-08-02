@@ -27,16 +27,15 @@ local validateData = data.new(opts.validate,
 validateData:normalize(opts.mean, opts.std)
 
 local function validateModel (model)
+  -- Check if can skip model
+  local modelName = string.match(model, '(.*)%.t7$')
+  if paths.filep(modelName .. '.json') then
+    local scores = json.load(modelName .. '.json')
+    return scores[1], scores[2]
+  end
+
   -- Load network from file
   local net = torch.load(model)
-  local modelName = string.match(model, '(.*)%.t7$')
-
-  -- Prepare output
-  local trainLogger = optim.Logger(modelName .. '-train.txt')
-  trainLogger:setNames{'Name', 'Score'}
-  local validateLogger = optim.Logger(modelName .. '-validate.txt')
-  validateLogger:setNames{'Name', 'Score'}
-
   -- Evaluate the network
   -- net:evaluate() -- For some reason, the model does not work in evaluate mode
   local function evaluate (dataset, logger)
@@ -58,11 +57,20 @@ local function validateModel (model)
     end
     return torch.Tensor(scores):mean()
   end
+
+  -- Output
   print("==> Start validation: " .. model)
+
+  local trainLogger = optim.Logger(modelName .. '-train.txt')
+  trainLogger:setNames{'Name', 'Score'}
   local trainScore = evaluate(trainData, trainLogger)
   print("Training data score:", trainScore)
+
+  local validateLogger = optim.Logger(modelName .. '-validate.txt')
+  validateLogger:setNames{'Name', 'Score'}
   local validateScore = evaluate(validateData, validateLogger)
   print("Validation data score:", validateScore)
+
   local out = {trainScore, validateScore}
   json.save(modelName .. '.json', out)
   return trainScore, validateScore
