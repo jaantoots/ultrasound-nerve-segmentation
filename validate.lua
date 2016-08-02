@@ -64,7 +64,7 @@ local function validateModel (model)
   local validateScore = evaluate(validateData, validateLogger)
   print("Validation data score:", validateScore)
   local out = {trainScore, validateScore}
-  json.save(opts.output .. '/' .. modelName .. '.json', out)
+  json.save(modelName .. '.json', out)
   return trainScore, validateScore
 end
 
