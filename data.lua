@@ -100,7 +100,7 @@ function Data:_loadFile (file)
   self.size = size[1]
   self.height = size[2]
   self.width = size[3]
-  print("Train", "Height", "Width")
+  print("Images", "Height", "Width")
   print(self.size, self.height, self.width)
 end
 
