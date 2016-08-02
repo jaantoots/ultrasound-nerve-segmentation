@@ -21,7 +21,7 @@ function helpers.validateParser ()
   -- Return argparse object
   local parser = argparse("validate.lua",
     "Validate a model for ultrasound nerve segmentation.")
-  parser:argument("model", "Model to validate.")
+  parser:argument("model", "Model file, or a directory with multiple models.")
   parser:option("-c --conf", "Configuration file.", "conf.json")
   parser:option("-b --batch", "Batch size.")
   return parser
