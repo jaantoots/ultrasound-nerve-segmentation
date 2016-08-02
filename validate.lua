@@ -36,7 +36,7 @@ local validateLogger = optim.Logger(modelName .. '-validate.txt')
 trainLogger:setNames{'Name', 'Score'}
 
 -- Evaluate the network
-net:evaluate()
+-- net:evaluate() -- For some reason, the model does not work in evaluate mode
 local function evaluate (dataset, logger)
   local scores = {}
   for i = 1, math.ceil(dataset.size/opts.batchSize) do
