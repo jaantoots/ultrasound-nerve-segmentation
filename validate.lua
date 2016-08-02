@@ -33,7 +33,7 @@ local modelName = string.match(args.model, '(.*)%.t7$')
 local trainLogger = optim.Logger(modelName .. '-train.txt')
 trainLogger:setNames{'Name', 'Score'}
 local validateLogger = optim.Logger(modelName .. '-validate.txt')
-trainLogger:setNames{'Name', 'Score'}
+validateLogger:setNames{'Name', 'Score'}
 
 -- Evaluate the network
 -- net:evaluate() -- For some reason, the model does not work in evaluate mode
