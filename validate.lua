@@ -71,7 +71,7 @@ end
 -- Test whether argument is a single model or directory
 if paths.dirp(args.model) then
   -- Write tsv log when validating all saved models in directory
-  local logger = optim:Logger(args.model .. '/' .. 'validate.tsv')
+  local logger = optim.Logger(args.model .. '/validate.tsv')
   logger:setNames{'Iteration', 'Train', 'Validate'}
   for model in paths.files(args.model) do
     if paths.filep(args.model .. '/' .. model) and
