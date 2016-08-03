@@ -27,6 +27,17 @@ function helpers.validateParser ()
   return parser
 end
 
+function helpers.testParser ()
+  -- Return argparse object
+  local parser = argparse("test.lua",
+    "Test a model for ultrasound nerve segmentation.")
+  parser:argument("model", "Model file.")
+  parser:flag("-r --no-resize", "Do not resize images for forward pass.")
+  parser:option("-c --conf", "Configuration file.", "conf.json")
+  parser:option("-b --batch", "Batch size.")
+  return parser
+end
+
 function helpers.opts (args)
   -- Return opts for training
   local opts
@@ -37,12 +48,15 @@ function helpers.opts (args)
   end
   opts.train = opts.train or 'train'
   opts.validate = opts.validate or 'train'
+  opts.trainDir = opts.trainDir or 'train'
+  opts.testDir = opts.testDir or 'test'
   opts.output = args.output or opts.output or
     'out/' .. os.date('%Y-%m-%d-%H-%M-%S')
   opts.height = opts.height or 200
   opts.width = opts.width or 280
   opts.weights = opts.weights or {1, 1}
   opts.batchSize = args.batch or opts.batchSize or 8
+  opts.altBatchSize = args.batch or opts.altBatchSize or 2
   opts.config = opts.config or {
     learningRate = 1e-1,
     alpha = 0.99,
@@ -81,6 +95,32 @@ function helpers.dice (outputs, targets)
   local coeffs = 2*torch.cdiv(nums, dens):squeeze()
   coeffs[coeffs:ne(coeffs)] = 1 -- by definition if both sets are zero
   return coeffs
+end
+
+function helpers.encode (mask)
+  -- Run-length encoder for the mask
+  local size = mask:size()
+  local output = ""
+  local runcount = 0
+  for i = 1, size[2] do
+    for j = 1, size[1] do
+      if mask[j][i] == 1 then
+        if runcount == 0 then
+          output = output .. (i - 1)*size[1] + j .. ' '
+        end
+        runcount = runcount + 1
+      else
+        if runcount > 0 then
+          output = output .. runcount .. ' '
+          runcount = 0
+        end
+      end
+    end
+  end
+  if runcount > 0 then
+    output = output .. runcount .. ' '
+  end
+  return string.match(output, '^(.-)%s?$')
 end
 
 return helpers

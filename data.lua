@@ -23,6 +23,7 @@ function Data:__init (file, height, width, validationSubjects, isValidate)
   else
     -- Initialize validation subjects definition
     self.validationSubjects = {}
+    validationSubjects = validationSubjects or {}
     for _, subject in pairs(validationSubjects) do
       self.validationSubjects[subject] = true
     end
@@ -62,15 +63,19 @@ function Data:_loadDir (dir, height, width)
     if not string.match(file, 'mask') then
       -- Divide according to subject number
       if self.validationSubjects[subject] then
-        self.validate[#self.validate + 1] = string.match(file, '%d+_%d+')
+        self.validate[#self.validate + 1] = string.match(file, '%d+_%d+') or
+          string.match(file, '%d+')
       else
-        self.train[#self.train + 1] = string.match(file, '%d+_%d+')
+        self.train[#self.train + 1] = string.match(file, '%d+_%d+') or
+          string.match(file, '%d+')
       end
     end
   end
   self.size = #self.train
-  self.height = height
-  self.width = width
+  self.owidth, self.oheight =
+    gm.Image(self.dir .. '/' .. self.train[1] .. '.tif'):size()
+  self.height = height or self.oheight
+  self.width = width or self.owidth
 
   print("Train", "Valid.", "Height", "Width")
   print(#self.train, #self.validate, self.height, self.width)
@@ -153,7 +158,7 @@ function Data:normalize (mean, std)
   return self.mean, self.std
 end
 
-function Data:_nextImageDisk ()
+function Data:_nextImageDisk (isTest)
   -- Load the images from disk and normalize
   local image
   if self.isValidate then
@@ -164,8 +169,13 @@ function Data:_nextImageDisk ()
   local input = gm.Image(self.dir .. '/' .. image .. '.tif')
     :size(self.width, self.height):toTensor('double', 'I', 'HW')
     :add(-self.mean):div(self.std)
-  local label = gm.Image(self.dir .. '/' .. image .. '_mask.tif')
-    :size(self.width, self.height):toTensor('double', 'I', 'HW')
+  local label
+  if isTest then
+    label = torch.Tensor(self.height, self.width):zero()
+  else
+    label = gm.Image(self.dir .. '/' .. image .. '_mask.tif')
+      :size(self.width, self.height):toTensor('double', 'I', 'HW')
+  end
   return input, label, image
 end
 
@@ -178,7 +188,7 @@ function Data:_nextImageMemory ()
   return input, label, name
 end
 
-function Data:batch (batchSize, noShuffle)
+function Data:batch (batchSize, noShuffle, isTest)
   --[[Return a minibatch of training data
 
   Parameters
@@ -210,7 +220,7 @@ function Data:batch (batchSize, noShuffle)
     if self.data then
       inputs[i][1], labels[i], names[i] = self:_nextImageMemory()
     else
-      inputs[i][1], labels[i], names[i] = self:_nextImageDisk()
+      inputs[i][1], labels[i], names[i] = self:_nextImageDisk(isTest)
     end
   end
   labels = labels + 1 -- ClassNLLCriterion expects class labels starting at 1

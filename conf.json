@@ -1,6 +1,8 @@
 {
     "train": "train.t7",
     "validate": "validate.t7",
+    "trainDir": "train",
+    "testDir": "test",
     "std": 0.2155469072352,
     "mean": 0.38984939490739,
     "weights": [
@@ -8,6 +10,7 @@
         1
     ],
     "batchSize": 8,
+    "altBatchSize": 2,
     "config": {
         "learningRate": 1e-04,
         "beta1": 0.9,
