@@ -120,8 +120,7 @@ function helpers.encode (mask)
   if runcount > 0 then
     output = output .. runcount .. ' '
   end
-  return output
---  return string.match(output, '^(.-)%s?$')
+  return string.match(output, '^(.-)%s?$')
 end
 
 return helpers

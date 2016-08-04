@@ -44,7 +44,7 @@ local function predict (dataset, suffix)
     -- Forward pass
     local outputs = net:forward(batchInputs)
     local _, predictions = outputs:max(outputs:dim() - 2)
-    predictions = predictions:squeeze():round():int() - 1
+    predictions = predictions:squeeze():int() - 1
 
     -- Output
     for j, name in pairs(names) do
@@ -56,7 +56,7 @@ local function predict (dataset, suffix)
       if not args.no_resize then
         local img = gm.Image(predStretch, 'I', 'DHW'):
           size(dataset.owidth, dataset.oheight)
-        pred = img:toTensor('double', 'I', 'HW'):round():int()
+        pred = img:toTensor('double', 'I', 'HW'):squeeze():round():int()
       end
       -- Different name style for file output for test data
       if string.match(name, '%d+_%d+') then
