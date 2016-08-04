@@ -54,7 +54,7 @@ local function predict (dataset, suffix)
       predStretch[1] = pred
       -- Resize image to original size
       if not args.no_resize then
-        local img = gm.Image(predStretch, 'I', 'HW'):
+        local img = gm.Image(predStretch, 'I', 'DHW'):
           size(dataset.owidth, dataset.oheight)
         pred = img:toTensor('double', 'I', 'HW'):round():int()
       end
