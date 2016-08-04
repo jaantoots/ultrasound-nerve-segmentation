@@ -31,6 +31,9 @@ local modelName = string.match(args.model, '(.*)%.t7$')
 -- net:evaluate() -- For some reason, the model does not work in evaluate mode
 local function predict (dataset, suffix)
   -- Output predictions for a dataset
+  if args.no_resize then
+    suffix = suffix .. '-no-resize'
+  end
   local fileName = modelName .. '-' .. suffix .. '.csv'
   if paths.filep(fileName) then
     return false
