@@ -44,7 +44,7 @@ local function predict (dataset, suffix)
     -- Forward pass
     local outputs = net:forward(batchInputs)
     local _, predictions = outputs:max(outputs:dim() - 2)
-    predictions = predictions:squeeze():int() - 1
+    predictions = predictions:squeeze():round():int() - 1
 
     -- Output
     for j, name in pairs(names) do
