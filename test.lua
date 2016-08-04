@@ -49,12 +49,14 @@ local function predict (dataset, suffix)
     -- Output
     for j, name in pairs(names) do
       if (i - 1)*opts.batchSize + j > dataset.size then break end
-      local prediction = predictions[j]
+      local pred = predictions[j]
+      local predStretch = torch.Tensor(1, pred:size(1), pred:size(2))
+      predStretch[1] = pred
       -- Resize image to original size
       if not args.no_resize then
-        local img = gm.Image(prediction, 'I', 'HW'):
+        local img = gm.Image(predStretch, 'I', 'HW'):
           size(dataset.owidth, dataset.oheight)
-        prediction = img:toTensor('double', 'I', 'HW'):round():int()
+        pred = img:toTensor('double', 'I', 'HW'):round():int()
       end
       -- Different name style for file output for test data
       if string.match(name, '%d+_%d+') then
@@ -62,7 +64,7 @@ local function predict (dataset, suffix)
         name = subject .. ',' .. image
       end
       -- Output run length encoded data
-      file:write(name, ',', helpers.encode(prediction), '\n')
+      file:write(name, ',', helpers.encode(pred), '\n')
     end
   end
   file:close()
