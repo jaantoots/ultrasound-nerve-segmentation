@@ -10,7 +10,7 @@ function net:ConvolutionLayer (nInputPlane, nOutputPlane)
   -- Batch normalization with default arguments
   self:add(nn.SpatialBatchNormalization(nOutputPlane))
   -- ReLU activation
-  self:add(nn.ReLU())
+  self:add(nn.ReLU(true))
 end
 
 function net:DilatedConvolutionLayer (nInputPlane, nOutputPlane, dilation)
@@ -22,7 +22,7 @@ function net:DilatedConvolutionLayer (nInputPlane, nOutputPlane, dilation)
   -- Batch normalization with default arguments
   self:add(nn.SpatialBatchNormalization(nOutputPlane))
   -- ReLU activation
-  self:add(nn.ReLU())
+  self:add(nn.ReLU(true))
 end
 
 -- Based on VGG ConvNet configuration D
@@ -38,17 +38,17 @@ net:add(nn.SpatialMaxPooling(2, 2, 2, 2))
 net:ConvolutionLayer(128, 256)
 net:ConvolutionLayer(256, 256)
 net:ConvolutionLayer(256, 256)
--- net:add(nn.SpatialDropout(0.5))
+net:add(nn.SpatialDropout(0.5))
 -- as before
 net:DilatedConvolutionLayer(256, 512, 2)
 net:DilatedConvolutionLayer(512, 512, 2)
 net:DilatedConvolutionLayer(512, 512, 2)
--- net:add(nn.SpatialDropout(0.5))
+net:add(nn.SpatialDropout(0.5))
 -- as before
 net:DilatedConvolutionLayer(512, 512, 4)
 net:DilatedConvolutionLayer(512, 512, 4)
 net:DilatedConvolutionLayer(512, 512, 4)
--- net:add(nn.SpatialDropout(0.5))
+net:add(nn.SpatialDropout(0.5))
 
 -- Classification
 net:add(nn.SpatialConvolution(512, 2, 1, 1))
