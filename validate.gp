@@ -1,4 +1,4 @@
-set terminal postscript eps enhanced color
+set terminal postscript eps enhanced color background "white"
 
 inputf=sprintf("%s/validate.sort.tsv", ARG1)
 set output sprintf("%s/validate.eps", ARG1)
