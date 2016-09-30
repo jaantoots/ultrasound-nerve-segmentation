@@ -1,5 +1,20 @@
 # Identify nerve structures in ultrasound images of the neck
 
+This is my solution to the Kaggle Ultrasound Nerve Segmentation
+competition using a VGG net for semantic segmentation implemented in
+Torch.
+
+Documentation for training and testing:
+
+```shell
+th train.lua --help
+th test.lua --help
+```
+
+The model is described in `model.lua`.
+
+## Description
+
 Even the bravest patient cringes at the mention of a surgical
 procedure. Surgery inevitably brings discomfort, and oftentimes
 involves significant post-surgical pain. Currently, patient pain is
